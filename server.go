@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"golang.design/x/clipboard"
@@ -40,6 +41,8 @@ func (c *Client) readPump() {
 		if err != nil {
 			break
 		}
+
+		log.Log("received message: ", string(message))
 
 		var e Msg
 
@@ -111,11 +114,26 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Set Ping and Pong Handlers
+	conn.SetPingHandler(func(appData string) error {
+		return conn.WriteControl(websocket.PongMessage, []byte(appData), time.Now().Add(time.Second))
+	})
+
+	conn.SetPongHandler(func(appData string) error {
+		return nil
+	})
+
+	log.Log("new connection")
+
+	defer conn.Close()
+
 	client := &Client{
 		conn: conn,
 		send: make(chan []byte, 256),
 	}
+
 	hub.addClient(client)
+	defer hub.removeClient(client)
 
 	go client.writePump()
 	client.readPump()
@@ -128,6 +146,7 @@ func as_server() {
 		c := on_clip()
 		for {
 			e := <-c
+			log.Log("new clipboard item: ", e)
 
 			byts, err := json.Marshal(e)
 			if err != nil {

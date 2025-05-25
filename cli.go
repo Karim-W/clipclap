@@ -14,6 +14,7 @@ var (
 	CLIENT_FLAG      = flag.Bool("c", false, "run client")
 	SERVER_FLAG      = flag.Bool("s", false, "run server")
 	HELP_FLAG        = flag.Bool("h", false, "Show Help")
+	VERBOSE_FLAG     = flag.Bool("verbose", false, "Show Verbose Logging")
 )
 
 func parse_cli_commands() error {
@@ -65,6 +66,10 @@ func parse_cli_commands() error {
 		} else {
 			return errors.New("must specify server host")
 		}
+	}
+
+	if VERBOSE_FLAG != nil {
+		log.isVerbose = *VERBOSE_FLAG
 	}
 
 	return nil

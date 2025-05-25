@@ -26,7 +26,16 @@ const (
 	CLIENT
 )
 
+func recoverPanic() {
+	// This function will recover from a panic
+	if r := recover(); r != nil {
+		fmt.Println("Recovered from panic:", r)
+	}
+}
+
 func main() {
+	log = Logger{}
+
 	hostname, err := os.Hostname()
 	assert(err)
 
@@ -43,6 +52,7 @@ func main() {
 	case SERVER:
 		as_server()
 	case CLIENT:
+		defer recoverPanic()
 		as_client()
 	default:
 		flag.PrintDefaults()
